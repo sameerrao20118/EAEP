@@ -98,12 +98,12 @@ flowchart LR
         Web[Web App]
     end
 
-    MApp -->|HTTPS + OIDC| APIGW
-    Web  -->|HTTPS + OIDC| APIGW
+    MApp -->|HTTPS+OIDC| APIGW
+    Web  -->|HTTPS+OIDC| APIGW
 
     APIGW[API Gateway] --> ORCH[Experience Orchestrator]
     APIGW --> CONSENT[Consent Service]
-    APIGW --> AUTH[Auth (Keycloak/Cognito)]
+    APIGW --> AUTH[Identity Provider]
 
     ORCH --> INSIGHTS[Insights API]
     ORCH --> ACTIONS[Actions API]
@@ -111,21 +111,21 @@ flowchart LR
     ORCH --> NOTIF[Notification Service]
     ORCH --> EB[(Kafka Event Bus)]
 
-    NOTIF --> Push[Push (APNs/Firebase)]
-    NOTIF --> Email[Email (SES/SendGrid)]
-    NOTIF --> Inbox[In-app Inbox]
+    NOTIF --> PUSH[Push Provider]
+    NOTIF --> EMAIL[Email Provider]
+    NOTIF --> INBOX[In-app Inbox]
 
     EB --> FLINK[Flink Enrichment]
-    FLINK --> FEATURE[Feature Store (Feast)]
+    FLINK --> FEATURE[Feature Store]
     FEATURE --> MODELS[Model API]
     FEATURE --> RULES[Rules Engine]
     MODELS --> ORCH
     RULES --> ORCH
 
-    EB --> LAKE[(Lakehouse S3/Delta)]
+    EB --> LAKE[(Lakehouse)]
     LAKE --> FEATURE
 
-    CORE[Core Banking & Card] --> INGEST[Connectors/Debezium]
+    CORE[Core Banking & Card] --> INGEST[Ingest Connectors]
     OB[Open Banking Feeds] --> INGEST
     CRM[CRM/Customer 360] --> INGEST
     INGEST --> EB
