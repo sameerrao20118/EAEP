@@ -1,5 +1,13 @@
 # Hyper-Personalized Retail Banking Experience
 
+## Deliverables (per brief)
+- Problem statement (Section 1)
+- Conceptual architecture with diagram (Section 7)
+- Data flow overview (Section 8)
+- Early API surface outline (Section 9)
+- Draft consent flow (Section 10)
+- Initial non-functional requirements list (Section 11)
+
 ## 1. Problem Summary
 Customers get generic insights, late warnings, and little coaching. Banks hold rich data, but it is fragmented and not turned into timely, contextual, event-driven experiences. This causes financial surprises, forgotten subscriptions, and churn—especially among Gen Z who expect proactive coaching.
 
@@ -82,6 +90,50 @@ graph TD
 - Observability: Prometheus/Grafana for SLOs; ELK for logs; OpenTelemetry traces.
 - Security: Vault/HSM for keys; secrets mounted via sidecars; WAF on gateway.
 
+### Interface Block Diagram (Mermaid)
+```mermaid
+flowchart LR
+    subgraph Clients
+        MApp[Mobile App] -->|HTTPS/OIDC| APIGW
+        Web[Web App] -->|HTTPS/OIDC| APIGW
+    end
+
+    APIGW[API Gateway] -->|JWT + mTLS| ORCH[Experience Orchestrator]
+    APIGW --> CONSENT[Consent Service]
+    APIGW --> AUTH[Auth (Keycloak/Cognito)]
+
+    ORCH -->|REST/gRPC| INSIGHTS[/Insights API/]
+    ORCH -->|REST/gRPC| ACTIONS[/Actions API/]
+    ORCH -->|REST/gRPC| SUBS[/Subscriptions API/]
+    ORCH --> NOTIF[Notification Service]
+    ORCH --> EB[(Kafka Event Bus)]
+
+    NOTIF --> Push[Push (APNs/Firebase)]
+    NOTIF --> Email[Email (SES/SendGrid)]
+    NOTIF --> Inbox[In-app Inbox API]
+
+    EB --> FLINK[Flink Enrichment]
+    FLINK --> FEATURE[Feature Store (Feast)]
+    FEATURE --> MODELS[Model API (FastAPI/PyTorch)]
+    FEATURE --> RULES[Rules Engine (OPA/Drools)]
+    MODELS --> ORCH
+    RULES --> ORCH
+
+    EB --> LAKE[(Lakehouse S3/Delta)]
+    LAKE --> FEATURE
+
+    CORE[Core Banking / Card Processor] --> INGEST_CONN[Connectors/Debezium] --> EB
+    OB[Open Banking Feeds] --> INGEST_CONN
+    CRM[CRM/Customer 360] --> INGEST_CONN
+    CONSENT --> ORCH
+    AUTH --> ORCH
+
+    style Clients fill:#f5f5f5,stroke:#888
+```
+
+*External interfaces:* Core banking/card processor, open banking providers, CRM/Customer 360, channel providers (APNs/Firebase, SES/SendGrid).  
+*Internal interfaces:* API Gateway ↔ Orchestrator/Consent/Auth; Orchestrator ↔ Insights/Actions/Subscriptions APIs; Orchestrator ↔ Notification/Feature/Model/Rules services; Kafka bus ↔ Flink/Feature/Lake connectors.
+
 ## 8. Data Flow (happy path)
 1) Transaction or balance event lands on event bus.
 2) Enrichment adds merchant normalization, category, location, customer segment.
@@ -109,6 +161,8 @@ graph TD
 ## 11. Initial Non-Functional Requirements
 - Availability: 99.9% for insight delivery APIs; graceful degradation to rules when models unavailable.
 - Latency: <2s P95 for insight retrieval; <10s end-to-end for high-priority alerts after event arrival.
+- Capacity (expected load): Size for 2k TPS read (insights) and 300 TPS write (actions/consents) with P95 latencies above; Kafka sized for 50k events/sec ingress with 72h retention.
+- Burst (unexpected load): Sustain 3x traffic spikes for 30 minutes without data loss by autoscaling stateless services (HPA), Kafka partitions ahead of time, and backpressure with DLQs/retries; alerts when queue lag > 30s.
 - Security: OAuth2/OIDC with FAPI profile, mTLS for internal services, HSM-backed key management, encrypted data in transit/at rest.
 - Privacy & Compliance: UK GDPR, PSD2 SCA/consent, FCA Consumer Duty (fair outcomes, explainability), DPIA before launch.
 - Observability: Trace all events; delivery, engagement, and model quality dashboards; dead-letter queues with retry policies.
