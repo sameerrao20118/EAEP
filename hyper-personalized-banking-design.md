@@ -94,41 +94,44 @@ graph TD
 ```mermaid
 flowchart LR
     subgraph Clients
-        MApp[Mobile App] -->|HTTPS/OIDC| APIGW
-        Web[Web App] -->|HTTPS/OIDC| APIGW
+        MApp[Mobile App]
+        Web[Web App]
     end
 
-    APIGW[API Gateway] -->|JWT + mTLS| ORCH[Experience Orchestrator]
+    MApp -->|HTTPS + OIDC| APIGW
+    Web  -->|HTTPS + OIDC| APIGW
+
+    APIGW[API Gateway] --> ORCH[Experience Orchestrator]
     APIGW --> CONSENT[Consent Service]
     APIGW --> AUTH[Auth (Keycloak/Cognito)]
 
-    ORCH -->|REST/gRPC| INSIGHTS[/Insights API/]
-    ORCH -->|REST/gRPC| ACTIONS[/Actions API/]
-    ORCH -->|REST/gRPC| SUBS[/Subscriptions API/]
+    ORCH --> INSIGHTS[Insights API]
+    ORCH --> ACTIONS[Actions API]
+    ORCH --> SUBS[Subscriptions API]
     ORCH --> NOTIF[Notification Service]
     ORCH --> EB[(Kafka Event Bus)]
 
     NOTIF --> Push[Push (APNs/Firebase)]
     NOTIF --> Email[Email (SES/SendGrid)]
-    NOTIF --> Inbox[In-app Inbox API]
+    NOTIF --> Inbox[In-app Inbox]
 
     EB --> FLINK[Flink Enrichment]
     FLINK --> FEATURE[Feature Store (Feast)]
-    FEATURE --> MODELS[Model API (FastAPI/PyTorch)]
-    FEATURE --> RULES[Rules Engine (OPA/Drools)]
+    FEATURE --> MODELS[Model API]
+    FEATURE --> RULES[Rules Engine]
     MODELS --> ORCH
     RULES --> ORCH
 
     EB --> LAKE[(Lakehouse S3/Delta)]
     LAKE --> FEATURE
 
-    CORE[Core Banking / Card Processor] --> INGEST_CONN[Connectors/Debezium] --> EB
-    OB[Open Banking Feeds] --> INGEST_CONN
-    CRM[CRM/Customer 360] --> INGEST_CONN
+    CORE[Core Banking & Card] --> INGEST[Connectors/Debezium]
+    OB[Open Banking Feeds] --> INGEST
+    CRM[CRM/Customer 360] --> INGEST
+    INGEST --> EB
+
     CONSENT --> ORCH
     AUTH --> ORCH
-
-    style Clients fill:#f5f5f5,stroke:#888
 ```
 
 *External interfaces:* Core banking/card processor, open banking providers, CRM/Customer 360, channel providers (APNs/Firebase, SES/SendGrid).  
