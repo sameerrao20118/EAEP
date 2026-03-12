@@ -98,8 +98,8 @@ flowchart LR
         Web[Web App]
     end
 
-    MApp -->|HTTPS+OIDC| APIGW
-    Web  -->|HTTPS+OIDC| APIGW
+    MApp --> APIGW
+    Web --> APIGW
 
     APIGW[API Gateway] --> ORCH[Experience Orchestrator]
     APIGW --> CONSENT[Consent Service]
@@ -132,6 +132,29 @@ flowchart LR
 
     CONSENT --> ORCH
     AUTH --> ORCH
+```
+
+### Interface Block Diagram (Text)
+```text
+Mobile App ----\
+                --> API Gateway --> Experience Orchestrator --> Insights API
+Web App -------/                      |                      --> Actions API
+                                      |                      --> Subscriptions API
+                                      |                      --> Notification Service --> Push Provider
+                                      |                                             --> Email Provider
+                                      |                                             --> In-app Inbox
+                                      |                      --> Kafka Event Bus --> Flink Enrichment --> Feature Store
+                                      |                                                              |-> Model API
+                                      |                                                              |-> Rules Engine
+                                      |
+                                      --> Consent Service
+                                      --> Identity Provider
+
+Core Banking and Card Systems ----\
+Open Banking Feeds --------------- > Ingest Connectors --> Kafka Event Bus
+CRM Customer 360 -----------------/
+
+Kafka Event Bus --> Lakehouse --> Feature Store
 ```
 
 *External interfaces:* Core banking/card processor, open banking providers, CRM/Customer 360, channel providers (APNs/Firebase, SES/SendGrid).  
