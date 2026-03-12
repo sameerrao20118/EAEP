@@ -116,77 +116,28 @@ The UK banking landscape is shifting rapidly. Challenger banks and fintechs are 
 
 #### Detailed Component Interconnect
 
-> **Legend:** 🟦 Existing / Legacy &nbsp;&nbsp; � New — built as part of this initiative &nbsp;&nbsp; Numbers = event flow order
+> **Legend:** 🟦 = Existing / Legacy &nbsp; 🟩 = New (this initiative) &nbsp; Flow: ①→②→③→④→⑤→⑥ &nbsp; ⑦ = cross-cutting
 
 ```mermaid
-flowchart TD
-    classDef existing fill:#1e3a5f,stroke:#4a90d9,color:#cce4ff,rx:6
-    classDef newComp  fill:#14532d,stroke:#4ade80,color:#d1fae5,rx:6
-    classDef layer    fill:#1a1a2e,stroke:#6b7280,color:#e5e7eb,rx:4
+flowchart LR
+    classDef ex fill:#1e3a5f,stroke:#4a90d9,color:#cce4ff
+    classDef nw fill:#14532d,stroke:#4ade80,color:#d1fae5
+    classDef cc fill:#4a1942,stroke:#c084fc,color:#f3e8ff
 
-    subgraph P1["① PRESENTATION"]
-        direction LR
-        MOB["� Mobile App\nios / Android"]:::existing
-        WEB["🌐 Web App\nReact"]:::existing
-        PUSH["📧 Push / Email\nAPNs · SES"]:::existing
-        INBOX["🔔 In-App Inbox\nSecure"]:::existing
-    end
+    A["① PRESENTATION 🟦\nMobile · Web · Push · Inbox"]:::ex
+    B["② API MGMT 🟦🟩\nGateway · WAF · FAPI/JWT/mTLS"]:::nw
+    C["③ ORCHESTRATION 🟩\nOrchestrator · Scheduler\nCampaign · Templates"]:::nw
+    D["④ INTELLIGENCE 🟩\nML Models · Rules Engine\nFeature Store"]:::nw
+    E["⑤ EVENT & DATA 🟦🟩\nKafka · Flink · Debezium\nLakehouse · Cache"]:::nw
+    F["⑥ CORE BANKING 🟦\nTxn · Account · Card · CRM\nLegacy Mainframe"]:::ex
+    G["⑦ CROSS-CUTTING 🟩\nGDPR/Consent · Observability\nPrometheus · OTel · ELK"]:::cc
 
-    subgraph P2["② API MANAGEMENT"]
-        direction LR
-        GW["� API Gateway\nKong / NGINX"]:::existing
-        WAF["�️ WAF / DDoS\nOWASP"]:::existing
-        AUTH["� Identity & AuthN\nFAPI · JWT · mTLS · SCA"]:::newComp
-    end
-
-    subgraph P3["③ EXPERIENCE ORCHESTRATION"]
-        direction LR
-        ORCH["🎯 Exp. Orchestrator"]:::newComp
-        SCHED["⏰ Notif. Scheduler"]:::newComp
-        CAMP["� Campaign /\nNudge Mgr"]:::newComp
-        TMPL["� Template Svc\nQuiet-Hours"]:::newComp
-    end
-
-    subgraph P4["④ INTELLIGENCE"]
-        direction LR
-        ML["🤖 ML Models\nCashflow · SubDet\nAnomaly"]:::newComp
-        RULES["⚖️ Rules Engine\nOPA · Thresholds\nFallback"]:::existing
-        FEAT["🗄️ Feature Store\nFeast · Redis\n+ Parquet"]:::newComp
-    end
-
-    subgraph P5["⑤ EVENT & DATA"]
-        direction LR
-        KAFKA["� Kafka / MSK\nSchema Registry"]:::newComp
-        FLINK["⚡ Flink / Kinesis\nEnrich · Normalise"]:::newComp
-        DEB["� Debezium / DBT\nIngestion"]:::existing
-        LAKE["🏔️ Lakehouse\nS3 · Delta · PII Tok."]:::newComp
-        CACHE["⚡ Redis / ElastiCache\nHot reads"]:::existing
-    end
-
-    subgraph P6["⑥ CORE BANKING — Legacy Mainframe �"]
-        direction LR
-        TXN["� Txn Processor"]:::existing
-        ACC["🏦 Account Svc"]:::existing
-        CARD["💳 Card Processor"]:::existing
-        CRM["👤 Customer Master"]:::existing
-    end
-
-    subgraph P7["⑦ CROSS-CUTTING CONCERNS"]
-        direction LR
-        GDPR["� GDPR & Consent\nStore · Audit · TTL"]:::newComp
-        OBS["� Observability\nPrometheus · ELK\nOpenTelemetry · DLQ"]:::newComp
-    end
-
-    P1 -->|"② Auth & route"| P2
-    P2 -->|"③ Orchestrate"| P3
-    P3 -->|"④ Score & decide"| P4
-    P4 -->|"⑤ Enrich events"| P5
-    P5 -->|"⑥ Read data"| P6
-    P5 -.->|"⑦ Audit & trace"| P7
-    P3 -.->|"⑦ Consent check"| P7
+    A --> B --> C --> D --> E --> F
+    C -.-> G
+    E -.-> G
 ```
 
-> **Flow:** ① User action → ② API auth & routing → ③ Personalisation decision → ④ ML scoring → ⑤ Event enrichment & storage → ⑥ Core banking reads → ⑦ Compliance & monitoring *(dotted = cross-cutting)*
+> **Flow:** ① User action → ② API auth → ③ Personalise → ④ ML score → ⑤ Enrich & store → ⑥ Core banking read · **⑦** Consent + Observability runs across all layers *(dotted)*
 
 ### 3.2 Conceptual Architecture Diagram (Mermaid)
 
