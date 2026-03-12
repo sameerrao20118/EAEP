@@ -99,6 +99,22 @@ The UK banking landscape is shifting rapidly. Challenger banks and fintechs are 
 
 ### 3.1 Functional Block Diagram
 
+#### Simplified Overview
+```
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  Mobile & Web   │────▶│   API Gateway    │────▶│   Experience     │
+│    Channels     │     │ (Auth & Security)│     │  Orchestrator    │
+└─────────────────┘     └──────────────────┘     └────────┬─────────┘
+                                                          │
+                                         ┌────────────────┴────────────────┐
+                                         ▼                                 ▼
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  Core Banking   │────▶│   Event Bus      │────▶│  Intelligence    │◀───▶│  GDPR & Consent  │
+│    (Legacy)     │     │   (Kafka/MSK)    │     │  (ML & Rules)    │     │     Service      │
+└─────────────────┘     └──────────────────┘     └──────────────────┘     └──────────────────┘
+```
+
+#### Detailed Component Interconnect
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │                              PRESENTATION LAYER                                     │
