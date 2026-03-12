@@ -115,87 +115,41 @@ The UK banking landscape is shifting rapidly. Challenger banks and fintechs are 
 ```
 
 #### Detailed Component Interconnect
-```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              PRESENTATION LAYER                                     │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌─────────────┐                    │
-│  │ Mobile App │  │  Web App   │  │ Push/Email │  │ In-App Inbox│                    │
-│  │ (iOS/And)  │  │ (React)    │  │ (APNs/SES) │  │  (Secure)   │                    │
-│  └─────┬──────┘  └─────┬──────┘  └──────▲─────┘  └──────▲──────┘                    │
-│        │               │                │               │                            │
-└────────┼───────────────┼────────────────┼───────────────┼────────────────────────────┘
-         │               │                │               │
-┌────────▼───────────────▼────────────────┼───────────────┼────────────────────────────┐
-│                           API MANAGEMENT LAYER                                       │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐                      │
-│  │   API Gateway   │  │  API Throttling  │  │  WAF / Security  │                     │
-│  │  (Kong/NGINX)   │  │  (Rate Limits)   │  │  (OWASP, DDoS)   │                    │
-│  └────────┬────────┘  └─────────────────┘  └──────────────────┘                      │
-│           │                                                                          │
-│  ┌────────▼────────────────────────────────────────────┐                             │
-│  │  Identity & AuthN/AuthZ (Keycloak / Cognito OIDC)   │                             │
-│  │  FAPI-compliant • JWT • mTLS internal • SCA step-up │                             │
-│  └─────────────────────────────────────────────────────┘                              │
-└──────────┬───────────────────────────────────────────────────────────────────────────┘
-           │
-┌──────────▼───────────────────────────────────────────────────────────────────────────┐
-│                       EXPERIENCE ORCHESTRATION LAYER                                 │
-│  ┌───────────────┐  ┌────────────────┐  ┌──────────────┐  ┌──────────────────┐       │
-│  │  Experience    │  │  Notification  │  │  Campaign /  │  │ Template Service │       │
-│  │  Orchestrator  │  │  Scheduler     │  │  Nudge Mgr   │  │ (Quiet Hours)    │       │
-│  └───────┬───────┘  └───────┬────────┘  └──────┬───────┘  └──────────────────┘       │
-└──────────┼──────────────────┼───────────────────┼────────────────────────────────────┘
-           │                  │                   │
-┌──────────▼──────────────────▼───────────────────▼────────────────────────────────────┐
-│                       INTELLIGENCE LAYER                                             │
-│  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────────────┐             │
-│  │    ML Models        │  │  Rules Engine       │  │   Feature Store     │             │
-│  │ (Cashflow Forecast, │  │  (OPA / Policy,     │  │ (Feast: Redis online│             │
-│  │  Subscription Det., │  │   Fallback Logic,   │  │  + Parquet offline) │             │
-│  │  Anomaly Scoring)   │  │   Spend Thresholds) │  │                     │             │
-│  └────────────────────┘  └────────────────────┘  └──────────────────────┘             │
-└──────────┬───────────────────────────────────────────────────────────────────────────┘
-           │
-┌──────────▼───────────────────────────────────────────────────────────────────────────┐
-│                       EVENT & DATA LAYER                                             │
-│                                                                                      │
-│  ┌──────────────────┐  ┌────────────────────┐  ┌───────────────────────────┐          │
-│  │  Event Bus        │  │  Stream Enrichment │  │  Ingestion Connectors    │          │
-│  │  (Kafka / MSK)    │  │  (Flink / Kinesis) │  │  (Debezium / DBT)       │          │
-│  │  Schema Registry  │  │  Merchant Norm.,   │  │  Core Banking, Cards,   │          │
-│  │  Partitioned by   │  │  Category, Segment │  │  Open Banking, CRM      │          │
-│  │  customer_id      │  │                    │  │                          │          │
-│  └──────────────────┘  └────────────────────┘  └───────────────────────────┘          │
-│                                                                                      │
-│  ┌──────────────────────────┐  ┌────────────────────────────┐                        │
-│  │  Lakehouse               │  │  Caching Layer             │                         │
-│  │  (S3 + Delta/Iceberg)    │  │  (Redis / ElastiCache)     │                         │
-│  │  Raw → Curated Zones     │  │  Hot reads, Feature sync   │                         │
-│  │  PII Tokenization        │  │  Real-time ↔ Mainframe     │                         │
-│  └──────────────────────────┘  └────────────────────────────┘                        │
-└──────────────────────────────────────────────────────────────────────────────────────┘
-           │
-┌──────────▼───────────────────────────────────────────────────────────────────────────┐
-│                       CORE BANKING (Legacy — Mainframe, As-Is)                       │
-│  ┌──────────────┐  ┌───────────────┐  ┌──────────────┐  ┌────────────────┐           │
-│  │ Transaction  │  │ Account       │  │ Card         │  │ Customer       │           │
-│  │ Processor    │  │ Service       │  │ Processor    │  │ Master (CRM)   │           │
-│  └──────────────┘  └───────────────┘  └──────────────┘  └────────────────┘           │
-└──────────────────────────────────────────────────────────────────────────────────────┘
 
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                       CROSS-CUTTING CONCERNS                                         │
-│                                                                                      │
-│  ┌─────────────────────────┐  ┌──────────────────────────────────────────┐            │
-│  │ GDPR & Consent Service  │  │ Observability                            │           │
-│  │ • Consent Store (PG)    │  │ • Prometheus + Grafana (SLOs)            │           │
-│  │ • Audit Log             │  │ • ELK / OpenSearch (Logs)                │           │
-│  │ • Purpose/Channel TTL   │  │ • OpenTelemetry (Traces)                 │           │
-│  │ • Data Lineage          │  │ • Dead-Letter Queues + Retry             │           │
-│  │ • Cross-border Rules    │  │ • Delivery & Engagement Dashboards       │           │
-│  └─────────────────────────┘  └──────────────────────────────────────────┘            │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+> 🔵 **Existing / Legacy**  🟢 **New (Built as part of this initiative)**  ·  Numbers show the event flow ①→②→③→④→⑤→⑥→⑦
+
 ```
+┌──────┬───────────────────────────────────────────────────────────────────────────┐
+│  ①  │  PRESENTATION                                                             │
+│ 🔵   │  Mobile (iOS/Android)  │  Web App (React)  │  Push/Email │  In-App Inbox  │
+├──────┼───────────────────────────────────────────────────────────────────────────┤
+│  ②  │  API MANAGEMENT                                                           │
+│ 🔵🟢 │  🔵 API Gateway (Kong)  │  🔵 WAF/DDoS  │  🟢 FAPI·JWT·mTLS·SCA step-up  │
+├──────┼───────────────────────────────────────────────────────────────────────────┤
+│  ③  │  EXPERIENCE ORCHESTRATION                                                 │
+│ 🟢   │  🟢 Exp. Orchestrator  │  🟢 Notif. Scheduler  │  🟢 Campaign/Nudge Mgr   │
+│      │  🟢 Template Service   │  🟢 Quiet-Hours Logic                            │
+├──────┼───────────────────────────────────────────────────────────────────────────┤
+│  ④  │  INTELLIGENCE                                                             │
+│ 🟢   │  🟢 ML Models                 │  🔵 Rules Engine      │  🟢 Feature Store  │
+│      │  Cashflow · SubDet · Anomaly  │  OPA · Thresholds     │  Feast (Redis +    │
+│      │  Scoring                      │  Fallback Logic       │  Parquet offline)  │
+├──────┼───────────────────────────────────────────────────────────────────────────┤
+│  ⑤  │  EVENT & DATA                                                             │
+│ 🔵🟢 │  🟢 Kafka/MSK + Schema Reg.  │  🟢 Flink/Kinesis Enrich  │  🔵 Debezium   │
+│      │  🟢 Lakehouse (S3+Delta)      │  🔵 Redis/ElastiCache     │  Merchant Norm │
+│      │  Raw→Curated · PII Tokenise   │  Hot reads · Feature sync │  Category·Seg  │
+├──────┼───────────────────────────────────────────────────────────────────────────┤
+│  ⑥  │  CORE BANKING  (Legacy — Mainframe, As-Is 🔵)                             │
+│ 🔵   │  TxnProcessor  │  AccountService  │  CardProcessor  │  CustomerMaster(CRM) │
+├──────┼───────────────────────────────────────────────────────────────────────────┤
+│  ⑦  │  CROSS-CUTTING CONCERNS                                                   │
+│ 🟢   │  🟢 GDPR/Consent: Store(PG) · Audit · Purpose-TTL · Lineage · XBorder    │
+│      │  🟢 Observability: Prometheus · ELK · OpenTelemetry · DLQ · Dashboards    │
+└──────┴───────────────────────────────────────────────────────────────────────────┘
+```
+
+> **Flow:** ① User action → ② API auth → ③ Personalisation decision → ④ ML scoring → ⑤ Event/data enrichment → ⑥ Core banking read → ⑦ Compliance & monitoring
 
 ### 3.2 Conceptual Architecture Diagram (Mermaid)
 

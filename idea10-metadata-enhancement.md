@@ -1,7 +1,59 @@
-# Idea 10 — Metadata Enhancement for Physical & Digital Documents
+# Idea 10 — Metadata Enhancement for Physical & Digital Documents ✅ SELECTED
 
-> **Ranking: #2 for Learning (AI + Observability)**
-> This idea offers the **richest hands-on AI exposure** — you will work with OCR, NLP, Large Language Models, vector search, and automated enrichment pipelines. Ideal if you want to understand applied AI in a real enterprise context.
+> **Sponsor**: Darren Briddle (ECM Team) | **Mentor**: TBC
+> **My Goal**: Learn deep document AI — IDP, OCR, LLM extraction, vector search, and MCP-based AI agents at billion-document scale
+
+---
+
+## 📌 Action Pointers — Where to Start When You Return
+
+### Immediate First Steps
+- [ ] **Email Sponsor (Darren Briddle)** — introduce yourself, confirm selection, ask for access to ECM sandbox/test environment
+- [ ] **Most important first question**: *"Can you share the MCP server documentation for ECM — what endpoints are exposed, what queries are supported, and which LLM is it connected to?"*
+- [ ] **Second question**: *"Which IDP tools and IBM tools does the bank have licensed? Can we get access to them for the pilot?"*
+
+### Understand the MCP Server First — This Is Your Biggest Advantage
+- [ ] **MCP (Model Context Protocol)** is cutting-edge — AI agents can directly query ECM via MCP
+- [ ] Read: [Model Context Protocol specification](https://modelcontextprotocol.io/) — understand what's possible
+- [ ] Experiment: Connect a local LLM (Claude / GPT-4) to the ECM MCP server and ask it document questions
+- [ ] **This is your differentiator** — most teams don't have MCP servers on their data stores yet
+
+### Top 3 Technical Skills to Build First
+1. **Intelligent Document Processing (IDP)** — AWS Textract or Azure Document Intelligence. Try extracting text + structure from a sample loan pack PDF
+2. **Document Classification with LLMs** — few-shot prompting to classify sub-documents: "Is this page a passport, a P60, or a credit check?"
+3. **Named Entity Recognition (NER) for banking docs** — extract SIN/NIN numbers, passport numbers, account numbers, dates
+
+### Key Technical Decisions to Pin Down Early
+- [ ] **Pilot document type**: Start with loan packs (Darren's example) — one document type, well-understood content
+- [ ] **Document classification taxonomy**: Define the list of sub-document types before building the classifier
+- [ ] **Batch vs. real-time**: Does the solution enrich at ingest (new documents) or backfill existing documents? Start with new documents.
+- [ ] **PII handling**: Confirm the access control model before indexing passport numbers and SIN numbers
+
+### Your Learning Milestones
+- **Week 1–2**: Get a sample set of loan pack PDFs from ECM sandbox; run through AWS Textract / Azure DI; see what raw output looks like
+- **Week 3**: Write a document splitter — break a 30-page loan pack into individual page clusters
+- **Week 4–5**: Build a classifier — LLM prompt to classify each page cluster: Passport / P60 / Bank Statement / Signature
+- **Week 6–7**: Add NER — extract passport number, SIN, DOB from classified pages
+- **Week 8**: Wire to ECM metadata store — write enriched metadata back via MCP server
+- **Week 9+**: Build the search layer — "show all documents for customer SIN X0123456"
+
+### The Use Case to Demo (Darren's exact example)
+> A customer submits a loan application. Inside is a 30-page PDF. The AI:
+> 1. Splits the pack into: passport (pp.3-4), P60 (pp.7-9), credit check (pp.12-15), signature page (p.28)
+> 2. Extracts: Passport No: GBR123456, SIN: X0123456, Expiry: 2027-03-01
+> 3. Writes enriched metadata back to ECM
+> 4. Next time the customer applies: system checks → "Passport already on file, valid until 2027. No re-submission needed."
+
+**This is your MVP demo. Build towards this.**
+
+### Avoid These Pitfalls
+- ⚠️ Don't start with the backfill of billions of documents — start with the ingest pipeline for new documents only
+- ⚠️ PII is extremely sensitive here — get sign-off on the data handling approach before indexing passport numbers
+- ⚠️ OCR quality on older scans may be poor — set a confidence threshold; route low-confidence extractions to human review
+- ⚠️ The document taxonomy (what types exist) needs domain expert input — don't assume, ask Darren's team
+
+---
+
 
 ---
 
@@ -12,62 +64,85 @@
 | **Title** | Metadata Enhancement for Physical & Digital Documents |
 | **Sponsor** | Darren Briddle |
 | **Mentor** | TBC |
-| **Core Problem** | The bank maintains large repositories of physical and digital documents with **inconsistent, incomplete, or missing metadata**, creating significant friction in content discovery. Internal teams waste time searching for documents they already possess. Customers are repeatedly asked to provide documentation the bank already holds. The lack of structured metadata prevents effective search, retrieval, and reuse of existing content. |
-| **Impact** | Operations teams cannot find relevant documents quickly; customer-facing teams repeatedly request the same information; customers experience poor service due to information silos; compliance risks from missing documentation; increased operational costs. |
-| **Urgency** | Customer experience expectations, existing research indicating benefit opportunities, the need to avoid redundant information requests, and previously identified funding gaps now being addressed. |
-
-### Proposed Scope (from brief)
-- Assess current metadata gaps in internal document stores
-- Design target-state metadata models tailored to customer and colleague needs
-- Evaluate **automation or AI enrichment** options for existing content
-- Stand-alone elements: metadata schema definition, automated enrichment tooling, search and discovery interfaces, integration with customer-facing processes
-
-### Benefits
-- Operations teams find documents faster with improved search
-- Customer-facing teams access complete information without redundant requests
-- Customers avoid providing the same information multiple times
-- Enhanced document discoverability across the organisation
-- Faster access to information for engineers and business partners
-- Better compliance and audit readiness with organised documentation
-- Reduced operational costs from improved efficiency
+| **System** | ECM (Enterprise Content Management) — the bank's central document store |
+| **Core Problem** | The bank maintains large repositories of documents with inconsistent, incomplete metadata creating friction in content discovery. Internal teams waste time searching. Customers are repeatedly asked to provide documentation the bank already holds. |
+| **Urgency** | Billions of documents in ECM; customer experience expectations; Digital X Manifesto mandate to reduce manual workload. |
 
 ---
 
-## 🎓 Why This is the #2 Learning Choice
+## 🎯 Sponsor's Pitch — What ECM Actually Needs (Darren Briddle, verbatim)
+
+> *"People are starting to pay more attention to these documents. They're not just a graveyard for documents to go and become records managed and disappear."*
+
+### The Real Problem — Inside the Document
+
+> *"Consider a 30-40 page loan pack in a PDF stored within our system. It will have metadata around: sort code, account number, document type — 'it's a loan pack'. But actually inside that loan pack there's a passport, a driver's licence, credit checks, a signature page. There's more to it than just a 30-page PDF."*
+
+**The current metadata only describes the container, not the contents.** AI needs to go inside.
+
+### The Concrete Use Case
+
+> *"We have customers that send in a passport three, four, five, six times for various different products within the bank. And we've actually had customer feedback: 'Why do I have to keep sending you a passport each time?'"*
+
+The goal:
+- Break loan packs apart into constituent documents
+- Identify that a passport exists inside the pack
+- Index it with a SIN number / customer identifier
+- Enable search: *"show me all documentation for this customer"* — rather than opening a 30-page PDF and scrolling
+
+### What's Already There (Existing Assets)
+> *"Tools that are already in the bank — IDP have some tools, IBM has some tools that can really delve into that data and enrich the metadata. We have MCP servers running on ECM now as well, so we can really get hold of that content."*
+
+| Asset | Description |
+|---|---|
+| **ECM System** | Active document store with billions of documents |
+| **IDP tooling** | Intelligent Document Processing tools already in the bank |
+| **IBM tooling** | IBM AI tooling available for document intelligence |
+| **MCP Servers** | **Model Context Protocol servers already running on ECM** — this is cutting-edge; AI agents can directly query ECM content |
+| **Existing metadata** | Basic: sort code, account number, document type, records management fields |
+
+### The Scope Direction
+> *"Enrich that content so we can break those loan packs up, show where the passport is, and be able to search on that passport."*
+
+Not a single customer view — a richer document view for the documents ECM holds for a customer.
+
+---
+
+## 🎓 Why This is #3 for Deep AI Learning
 
 | Skill Area | What You Will Learn |
 |---|---|
-| **Applied AI / NLP** | Named Entity Recognition (NER), document classification, summarisation using LLMs (GPT-4, Gemini, Claude) |
-| **OCR & Document Intelligence** | AWS Textract, Azure Document Intelligence, Google Document AI — converting physical docs to structured data |
-| **Vector Search & Embeddings** | OpenSearch / Elasticsearch with vector embeddings for semantic search (not just keyword search) |
-| **LLM Prompt Engineering** | Designing prompts for metadata extraction, classification, and summarisation of banking documents |
-| **RAG (Retrieval-Augmented Generation)** | Building a document Q&A layer on top of the enriched metadata store |
-| **Data Governance & Privacy** | PII detection and redaction before AI processing; access control on enriched metadata |
-| **MLOps for Enrichment** | Pipeline orchestration (Airflow / Step Functions), confidence scoring, human-in-the-loop review |
+| **Intelligent Document Processing (IDP)** | IBM Datacap / AWS Textract / Azure Document Intelligence — real enterprise-grade document AI |
+| **MCP (Model Context Protocol)** | Bleeding-edge: AI agents querying ECM via MCP servers — the new standard for AI tool use |
+| **Document Decomposition** | Splitting multi-document PDFs into constituent parts using AI (layout detection, page classification) |
+| **OCR + Layout Detection** | Recognising document structure: passport photo area, signature block, table of contents |
+| **NER for Banking Documents** | Extracting SIN/NIN numbers, passport numbers, dates of birth, addresses from unstructured text |
+| **RAG on Document Content** | Vector search over billions of documents — scale challenge unlike any other idea |
+| **AI Agent for Document Workflows** | Agents that process incoming document packs automatically, enrich metadata, flag exceptions |
+| **Privacy-Preserving AI** | Working with PII at massive scale — PII detection, redaction, access control for AI-enriched data |
 
 ---
 
 ## ❓ Questions for Sponsor (Darren Briddle) & Mentor (TBC)
 
-### Problem Clarification
-1. What types of documents are in scope? (KYC documents, policy documents, contracts, correspondence, scanned physical forms?)
-2. What is the approximate volume and growth rate? (millions of documents? Terabytes?)
-3. What repositories currently hold these documents? (SharePoint, FileNet, ECM, S3/Blob, email archives, physical scanning systems?)
-4. Is the primary pain point **internal search** (employees), **customer-facing reuse** ("we already have this document"), or **compliance/audit discovery**?
-5. What metadata exists today? Is there any schema or taxonomy currently applied, even inconsistently?
+### On the MCP Server (Most Important)
+1. MCP servers are running on ECM — which LLM or AI framework are they connecting to? Is this connected to an internal LLM service or a cloud provider (Azure OpenAI, IBM WatsonX)?
+2. What is the current MCP capability — can agents read documents? Can they search? Can they write/update metadata? Understanding the MCP surface area defines what's possible.
+3. Are the MCP servers production-grade or experimental? This affects the architecture approach significantly.
 
-### Scope & Prioritisation
-6. What are the 2–3 highest-value document types to start with for the pilot?
-7. Is there an existing AI budget or approved cloud AI services available? (AWS Bedrock, Azure OpenAI, GCP Vertex AI?)
-8. Are there data sovereignty or residency restrictions on which documents can pass through cloud AI services?
-9. Is OCR already applied to physical document scans, or does that need to be built?
-10. What search experience currently exists for staff? (SharePoint Search, manual folder browsing, nothing structured?)
+### On Document Intelligence
+4. The loan pack example — is the current problem that ECM doesn't know what's inside a PDF, or that it knows but has no structured way to surface sub-documents?
+5. What formats are documents stored in? (PDF, TIFF scans, native Office docs?) What's the quality of scans (DPI, hand-filled forms, photocopies)?
+6. The IDP and IBM tools mentioned — are these licensed and available to use, or would procurement be needed? Have they been evaluated against the specific ECM document types?
+7. Is there a classification taxonomy for document types already (e.g., "Passport", "P60", "Bank Statement", "Credit Check") or does that need to be designed?
 
-### Technical & Compliance
-11. What PII/sensitive data classification exists on documents today? (e.g., KYC docs contain customer PII — how do we handle this with AI?)
-12. Is there an existing IAM/DRM system that controls document access? The enriched metadata must inherit these access controls.
-13. What is the appetite for a **human-in-the-loop** review step for AI-generated metadata before it is published?
-14. Are there regulatory requirements for how long enriched metadata must be retained or audited?
+### On Scale
+8. "Billions of documents" — what is the growth rate per day/week? Does the solution need to process documents at ingest (real-time) or can it backfill existing docs in batch?
+9. What is the acceptable latency for metadata enrichment? (Real-time at ingest, within 1 hour, overnight?)
+
+### On Privacy & Compliance
+10. Passports and SIN numbers are extremely sensitive PII — what is the data classification and access control framework for enriched metadata? Who can query a customer's passport metadata?
+11. Does GDPR right-to-erasure apply to enriched metadata? If a document is deleted, must the AI-extracted metadata also be purged?
 
 ---
 
@@ -77,52 +152,50 @@
 
 ```mermaid
 graph TD
-    subgraph Document Repositories
-        SP[SharePoint / ECM]
-        S3[S3 / Blob Storage]
-        SCAN[Physical Scans<br/>Scanned PDFs]
-        EMAIL[Email Archives]
+    subgraph Document Ingest
+        ECM[ECM Store<br/>Billions of documents]
+        INGEST[Document Ingestion Trigger<br/>New / updated document event]
     end
 
-    subgraph Ingestion & OCR
-        CONN[Repository Connectors<br/>Preserve ACLs]
-        OCR[OCR Engine<br/>AWS Textract / Azure DI]
+    subgraph AI Document Pipeline
+        SPLIT[Document Splitter<br/>Decompose 30-page pack into sub-documents]
+        OCR[OCR + Layout Detection<br/>AWS Textract / Azure DI / IBM Datacap]
+        CLASS[Document Classifier<br/>LLM: Passport / P60 / Credit Check / Signature]
+        NER[Entity Extractor<br/>SIN, passport no., DOB, name, account no.]
+        PII[PII Detector & Tokeniser<br/>Presidio / IBM OpenPages]
+        SUMM[Document Summariser<br/>LLM: 1-line summary per sub-document]
+        EMBED[Embedding Generator<br/>Semantic vectors for search]
     end
 
-    subgraph AI Enrichment Pipeline
-        NER[NER + Entity Extraction<br/>Doc Type, Customer ID, Date, Jurisdiction]
-        CLASS[Document Classifier<br/>LLM / Fine-tuned model]
-        PII[PII Detector & Redactor<br/>Amazon Comprehend / Presidio]
-        SUMM[Summarisation<br/>GPT-4 / Gemini / Claude]
-        EMBED[Embedding Generator<br/>text-embedding-3 / Cohere]
+    subgraph MCP Layer - Already Exists
+        MCP[MCP Server on ECM<br/>AI Agents query ECM content]
+        AGENT[Document Intelligence Agent<br/>LLM Agent via MCP: answer queries, trigger enrichment]
     end
 
-    subgraph Metadata Store & Search
-        META[Metadata Index<br/>OpenSearch / Elasticsearch]
-        VEC[Vector Store<br/>pgvector / Pinecone / OpenSearch FAISS]
-        AUDIT[Audit & Lineage Store<br/>Postgres]
+    subgraph Metadata Store
+        META[Enriched Metadata Index<br/>OpenSearch / IBM Content Navigator]
+        VEC[Vector Store<br/>Semantic search over document content]
+        AUDIT[Audit Log<br/>What AI extracted, confidence, reviewer]
     end
 
-    subgraph Discovery & Integration
-        SEARCH[Unified Search UI<br/>Faceted + Semantic]
-        API[REST APIs<br/>For Customer-Facing Apps]
-        RAG[RAG Q&A Layer<br/>Document Assistant]
+    subgraph Search & Discovery
+        SEARCH[Unified Search<br/>Customer SIN → all documents]
+        API[REST API<br/>Customer-facing and internal apps]
+        DEDUP[Duplicate Detector<br/>Customer sent passport before? Flag it]
     end
 
     subgraph Governance
-        HITL[Human-in-the-Loop<br/>Curation Workflow]
-        QUAL[Quality Dashboard<br/>Enrichment accuracy, coverage]
+        HITL[Human Review<br/>Low-confidence classifications]
+        ACCESS[Access Control<br/>Inherit ECM permissions on enriched metadata]
+        RETAIN[Retention Engine<br/>GDPR erasure propagates to enriched metadata]
     end
 
-    SP --> CONN
-    S3 --> CONN
-    SCAN --> OCR
-    EMAIL --> CONN
-    OCR --> NER
-    CONN --> NER
-
-    NER --> CLASS
-    CLASS --> PII
+    ECM --> INGEST
+    INGEST --> SPLIT
+    SPLIT --> OCR
+    OCR --> CLASS
+    CLASS --> NER
+    NER --> PII
     PII --> SUMM
     SUMM --> EMBED
 
@@ -130,39 +203,52 @@ graph TD
     EMBED --> VEC
     META --> AUDIT
 
+    MCP --> AGENT
+    ECM --> MCP
+    AGENT --> META
+
     VEC --> SEARCH
     META --> SEARCH
     META --> API
-    VEC --> RAG
+    SEARCH --> DEDUP
 
     META --> HITL
-    HITL --> QUAL
+    META --> ACCESS
+    META --> RETAIN
 ```
 
 ### Core AI Components
+
 | Component | Technology Options | Purpose |
 |---|---|---|
-| OCR | AWS Textract / Azure Document Intelligence | Extract text from scans, PDFs, images |
-| NER / Entity Extraction | AWS Comprehend / spaCy / Azure Language | Extract doc type, IDs, dates, jurisdiction |
-| Document Classifier | Fine-tuned BERT / GPT-4 with few-shot prompts | Categorise documents into standard taxonomy |
-| PII Detection | Amazon Comprehend / Microsoft Presidio | Detect and redact sensitive fields before indexing |
-| Summarisation | GPT-4 / Gemini Pro / Claude Haiku | Generate concise summaries for search snippets |
-| Semantic Search | OpenSearch with FAISS / Pinecone | Vector-based similarity search beyond keywords |
-| RAG Q&A | LangChain + LLM | Answer staff queries citing source documents |
-| Confidence Scoring | Custom threshold layer | Route low-confidence predictions to human review |
+| Document Splitter | AWS Textract / Azure DI / PyMuPDF | Identify page boundaries between sub-documents in a multi-doc PDF |
+| OCR + Layout | IBM Datacap / AWS Textract / Azure Document Intelligence | Extract text from scans preserving structure |
+| Document Classifier | GPT-4 / fine-tuned BERT / IBM WatsonX | Classify each sub-document: Passport, P60, Bank Statement, etc. |
+| Entity Extractor | AWS Comprehend / spaCy / Azure Language | Extract SIN, passport number, DOB, name, account numbers |
+| PII Tokeniser | Microsoft Presidio / IBM OpenPages | Detect and selectively redact PII before indexing |
+| Embedding | text-embedding-3 / Cohere | Semantic vectors for similarity search |
+| MCP Integration | Existing MCP server on ECM | AI agents use MCP to query and update ECM content directly |
+| Document Agent | LangGraph + LLM via MCP | Natural language queries: "show me all documents for customer X" |
+| Vector Search | OpenSearch with FAISS / Pinecone | Semantic search over document content at scale |
+| Duplicate Detector | Similarity matching on extracted entities | "This customer already has a valid passport in ECM from 2023" |
 
 ### 12-Week Delivery Plan
+
 | Phase | Weeks | Focus |
 |---|---|---|
-| Assess & Design | 1–3 | Inventory repos, define metadata schema, select AI stack, choose pilot (e.g., KYC docs) |
-| Build Enrichment Pipeline | 4–7 | OCR + NER + Classifier + PII; stand up metadata store and search index |
-| Pilot & Tune | 8–11 | Run pilot corpus, measure accuracy, add human review loop, tune relevance |
-| Harden & Expand | 12–16 | Add repos, enforce access controls, add RAG Q&A layer, dashboards |
+| Discovery & Taxonomy | 1–3 | Audit existing IDP/IBM tools; define document classification taxonomy; select pilot document type (loan packs); design enriched metadata schema |
+| Pipeline Build | 4–7 | Build splitter + classifier + NER pipeline; integrate with MCP server; populate metadata index for pilot corpus |
+| Search & Dedup | 8–10 | Unified search UI; duplicate passport detector; customer document view API |
+| Scale & Govern | 11–12 | GDPR erasure propagation; access controls; confidence thresholds + human review workflow; batch backfill strategy for existing documents |
 
 ---
 
 ## 📊 Success Metrics
-- Document search success rate (searches returning relevant results in top 3) → target >85%
-- Reduction in duplicate document requests from customers → target >50% in pilot domains
-- Enrichment accuracy (metadata precision/recall vs human review) → target >90% for key fields
-- Time to find a document (baseline vs. after) → target 80% reduction
+
+| Goal | Metric | Target |
+|---|---|---|
+| Reduce passport re-submissions | % reduction in customers asked to re-submit a document already in ECM | >50% in pilot customer segment |
+| Document discoverability | Time to find a specific sub-document within a customer's file | From minutes of scrolling → <5 second search |
+| Enrichment accuracy | Document classifier precision/recall vs. human review | >92% for top 5 document types |
+| Duplicate detection | % of duplicate document requests caught before reaching customer | Baseline then >70% |
+| Manual effort reduction | Staff hours saved in document retrieval tasks | Measurable via workflow time-tracking |
